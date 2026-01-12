@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d955009dc95d3c4f97ff5ac8e135c71, type: 3}
+  m_Name: CaptainNode3
+  m_EditorClassIdentifier: 
+  speakerName: Capitaine
+  dialogueText: "Votre mission : parcourir la boucle et rassembler tous les indices.
+    Notes, objets personnels, preuves... tout ce qui peut nous aider \xE0 comprendre
+    ce qui s'est pass\xE9."
+  requiredFlags: []
+  forbiddenFlags: []
+  flagsToAddOnVisit: []
+  flagsToRemoveOnVisit: []
+  choices: []
+  nextNode: {fileID: 11400000, guid: a8cdf3c5c4334a746bb6b18bc1493adb, type: 2}

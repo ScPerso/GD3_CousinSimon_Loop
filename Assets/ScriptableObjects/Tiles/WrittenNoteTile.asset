@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6122123632a106b43b6089d5eb76b7dd, type: 3}
+  m_Name: WrittenNoteTile
+  m_EditorClassIdentifier: 
+  tileType: 2
+  tileName: "Note \xE9crite"
+  description: "Une note laiss\xE9e par l'enqu\xEAteur disparu. Peut-\xEAtre contient-elle
+    des informations importantes."
+  tileIcon: {fileID: 0}
+  tileColor: {r: 0.9, g: 0.9, b: 0.69, a: 1}
+  tilePrefab: {fileID: 0}
+  encounterChance: 0
+  isPassable: 1
+  triggersOnEnter: 1
+  canBeRevisited: 0
+  goldReward: 0
+  experienceReward: 10
+  enterSound: {fileID: 0}
+  actionSound: {fileID: 0}

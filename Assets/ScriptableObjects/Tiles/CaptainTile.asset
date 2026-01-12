@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6122123632a106b43b6089d5eb76b7dd, type: 3}
+  m_Name: CaptainTile
+  m_EditorClassIdentifier: 
+  tileType: 1
+  tileName: Bureau du Capitaine
+  description: "Le bureau du Capitaine qui vous a envoy\xE9 en mission. Rapportez-lui
+    vos d\xE9couvertes."
+  tileIcon: {fileID: 0}
+  tileColor: {r: 0.2, g: 0.4, b: 0.8, a: 1}
+  tilePrefab: {fileID: 0}
+  encounterChance: 0
+  isPassable: 1
+  triggersOnEnter: 1
+  canBeRevisited: 1
+  goldReward: 0
+  experienceReward: 0
+  enterSound: {fileID: 0}
+  actionSound: {fileID: 0}
