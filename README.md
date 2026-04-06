@@ -1,176 +1,22 @@
-# Document de présentation du projet : “Sur les traces de l'enquêteur”
+# Dans le loop hero initial, on doit jeter un dé pour avancer et faire des tours sur le plateau. Le but est de résoudre une enquête à travers différents dialogues qui s’ouvrent sur des cases spécifiques.
 
 # 
 
-# 
-
-# Présentation de la narration
+# Dans ce rendu, il y a deux nouvelles cases, chacune correspondant à un mini-jeu : un cache-cache avec une IA et un puzzle.
 
 # 
 
-# La mission
-
-# Vous incarnez un détective dépêché par le Capitaine pour une mission urgente. Un enquêteur a mystérieusement disparu lors d'une enquête dans un secteur étrange.
+# Le puzzle se lance sur la case violette, mais on peut également y accéder en lançant directement la scène appelée “puzzle”. Nous avons 30 secondes pour le compléter, c’est-à-dire placer les bonnes pièces aux bons endroits. Si nous réussissons dans le temps imparti, le mini-jeu est validé et nous gagnons 10 ressources, permettant d’effectuer des lancers de dés supplémentaires dans le loop hero. À l’inverse, nous en perdons 10 en cas d’échec.
 
 # 
 
-# Votre objectif : collecter 4 indices majeurs et faire votre rapport au Capitaine.
+# Le puzzle fonctionne avec un tableau de 9 cases vides, chacune numérotée, ainsi que 9 pièces correspondant à 9 illustrations, elles aussi numérotées. Un système de drag \& drop permet de déplacer les pièces, et un système d’ancrage et de padding sur les cases du tableau permet aux pièces de s’y emboîter correctement. Une vérification est effectuée une fois le puzzle complété : “chaque pièce est-elle positionnée sur la case correspondante ?”. Si oui, le puzzle est réussi ; sinon, c’est un échec.
 
 # 
 
-# L'enquête — Les 4 indices
-
-# Pour résoudre le mystère de la disparition, vous devez retrouver quatre preuves dispersées le long du chemin :
+# Concernant le cache-cache, il se déroule sur la case orange (la première des deux). L’IA utilise un système de points de patrouille (target points), c’est-à-dire des positions dans la scène entre lesquelles elle se déplace. Elle patrouille de point en point, et dispose d’un cône de vision défini par une distance et un angle. Si le joueur entre dans ce cône, l’IA vérifie s’il y a un obstacle entre elle et le joueur pouvant bloquer sa vue. Si ce n’est pas le cas, elle passe en mode poursuite : elle accélère, change d’animation (elle court au lieu de marcher) et traque le joueur. Si elle s’éloigne trop, elle perd le joueur de vue et reprend sa patrouille. Si la distance entre elle et le joueur est inférieure ou égale à la “catch distance”, cela déclenche une attaque et donc la défaite du joueur, qui est considéré comme attrapé.
 
 # 
 
-# 1\.  La Note écrite
-
-# Une note laissée par l'enquêteur disparu
-
-# 
-
-# 2\.  L'Objet personnel
-
-# La loupe de l'enquêteur, abandonnée sur le sol.
-
-# 
-
-# 3\.  La Preuve de paranormal
-
-# Des traces étranges et inquiétantes sur les lieux. En vous approchant pour examiner, vous apercevez quelque chose :
-
-# 
-
-# "Qu'est-ce que cette chose que j'aperçois ?! Un... monstre ? Je ferais mieux de ne pas passer par ici à nouveau..."
-
-# 
-
-# &nbsp;Si vous revenez une seconde fois examiner cette preuve, la créature vous repère et vous attaque. GAME OVER immédiat.
-
-# 
-
-# 4\.  Le Cadavre
-
-# La découverte tragique : le corps sans vie de l'enquêteur disparu, sur la scène du crime.
-
-# 
-
-# Le rapport final
-
-# Une fois les 4 indices collectés, vous retournez voir le Capitaine pour lui faire votre rapport complet. Avec toutes ces informations, vous avez fais avancer l'enquête, bien que l’affaire restera à jamais mystérieuse.
-
-# 
-
-# Mission accomplie : VICTOIRE.
-
-# 
-
-# Mécaniques de jeu
-
-# 
-
-# Le jeu se déroule sur un plateau de 19 cases. Vous parcourez ce circuit pour explorer la zone et trouver des indices. 
-
-# 
-
-# Composition du plateau :
-
-# 
-
-# &nbsp;1 Case Capitaine (point de départ et de fin)
-
-# &nbsp;1 Case Note écrite (info)
-
-# &nbsp;1 Case Objet personnel (info)
-
-# &nbsp;1 Case Preuve (info + danger)
-
-# &nbsp;1 Case Cadavre (info)
-
-# &nbsp;2 Cases Recharge (récupération +30 ressources)
-
-# Cases vides (aucun effet)
-
-# 
-
-# Système de déplacement :
-
-# 
-
-# Lancez un dé à 6 faces (résultat : 1 à 6)
-
-# Chaque lancer coûte 5 points de ressources
-
-# Vous vous déplacez automatiquement du nombre de cases indiqué
-
-# La case d'arrivée s'active et déclenche son effet
-
-# 
-
-# Circuit :
-
-# 
-
-# Le plateau forme une boucle : après la case 19, vous revenez à la case 0
-
-# Compteur de "tours" pour suivre combien de fois vous faites le circuit
-
-# Vous pouvez continuer à explorer tant que vous avez des ressources
-
-# 
-
-# Gestion des ressources :
-
-# Vous disposez d'un capital de ressources limité représentant votre temps et énergie pour mener l'enquête.
-
-# 
-
-# Système :
-
-# 
-
-# Ressources de départ : 100 points
-
-# Coût par lancer de dé : -5 points
-
-# Cases Recharge : +30 points
-
-# &nbsp;
-
-# Condition de défaite : Si vos ressources tombent à 0, vous n'avez plus l'énergie pour continuer l'enquête. GAME OVER.
-
-# 
-
-# Première visite et Revisites :
-
-# 
-
-# Chaque case réagit différemment selon si c'est votre première visite :
-
-# 
-
-# Première découverte : Dialogue de découverte, collecte de l'indice
-
-# Revisites : Dialogue montrant que vous êtes déjà passé ici ("Je tourne en rond...", "Déjà vu cet endroit...")
-
-# Exception dangereuse : La case Preuve déclenche un Game Over si vous la revisitez (le monstre vous attrape).
-
-# 
-
-# Condition de Victoire/Défaite
-
-# 
-
-# Plus de ressources ou revisite de la case preuve = défaite
-
-# Collecte de tous les indice et retour au bureau du capitaine = Victoire
-
-# 
-
-# 
-
-# 
-
-
+# Le puzzle se joue à la souris, tandis que le cache-cache se joue avec ZQSD ou les flèches.
 
