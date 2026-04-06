@@ -44,76 +44,94 @@ public class PlayerLoopController : MonoBehaviour
     private bool isProcessing;
     private List<BoardTile> currentPath = new List<BoardTile>();
 
+    // Survit au rechargement de scène car statique — sauvegardé avant LoadScene.
+    private static int savedPathIndexForReturn = -1;
+
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
         Instance = this;
     }
 
     private void Start()
     {
         if (diceRoller == null)
-        {
             diceRoller = GetComponent<DiceRoller>();
-        }
 
         if (diceRoller != null)
-        {
             diceRoller.OnRollComplete += OnDiceRolled;
+
+        if (playerObject == null)
+        {
+            playerObject = GameObject.FindGameObjectWithTag("Player");
+            if (playerObject == null)
+                Debug.LogError("[PlayerLoopController] playerObject introuvable — taggez-le 'Player' ou assignez-le dans l'Inspector.");
         }
+
+        enabled = true;
+        isProcessing = false;
+        currentPath.Clear();
 
         StartCoroutine(InitializePlayerAfterBoard());
     }
 
     private IEnumerator InitializePlayerAfterBoard()
     {
-        while (BoardManager.Instance == null)
+        float timeout = 5f;
+        float elapsed = 0f;
+        while (BoardManager.Instance == null && elapsed < timeout)
         {
+            elapsed += Time.deltaTime;
             yield return null;
         }
 
-        yield return new WaitForSeconds(0.1f);
+        if (BoardManager.Instance == null)
+        {
+            Debug.LogError("[PlayerLoopController] BoardManager introuvable après 5s.");
+            yield break;
+        }
 
+        BoardManager.Instance.GenerateBoard();
+        yield return null;
+        yield return new WaitForSeconds(0.15f);
+
+        // Lire et consommer l'index sauvegardé (set par ForceEndTurnForSceneChange avant LoadScene)
+        int resumeIndex = 0;
+        if (savedPathIndexForReturn >= 0)
+        {
+            resumeIndex = savedPathIndexForReturn;
+            savedPathIndexForReturn = -1;
+            Debug.Log($"[PlayerLoopController] Reprise à l'index {resumeIndex} après mini-jeu.");
+        }
+
+        startPathIndex = resumeIndex;
         InitializePlayer();
+
+        // Forcer le broadcast WaitingToRoll même si l'état est déjà celui-là
+        CurrentState = LoopState.GameOver;
         ChangeState(LoopState.WaitingToRoll);
     }
 
     private void InitializePlayer()
     {
-        if (BoardManager.Instance == null)
-        {
-            Debug.LogError("BoardManager not found. Cannot initialize player.");
-            return;
-        }
-
         BoardTile startTile = BoardManager.Instance.GetTileByPathIndex(startPathIndex);
         if (startTile == null)
         {
-            Debug.LogError($"Start tile not found at path index {startPathIndex}. Make sure the board is generated.");
+            Debug.LogError($"[PlayerLoopController] Tuile introuvable à l'index {startPathIndex}.");
             return;
         }
 
         CurrentTile = startTile;
         CurrentPathIndex = startPathIndex;
-        
+
         if (playerObject != null)
         {
             Vector3 targetPos = startTile.transform.position;
             targetPos.y = playerObject.transform.position.y;
             playerObject.transform.position = targetPos;
-            
-            Debug.Log($"Player initialized at path index {startPathIndex}, world pos {targetPos}");
         }
-        
-        startTile.EnterTile(playerObject);
 
-        CurrentTurn = 0;
-        TotalLoops = 0;
+        startTile.EnterTile(playerObject);
+        Debug.Log($"[PlayerLoopController] Joueur placé à l'index {startPathIndex}.");
     }
 
     public void StartTurn()
@@ -360,6 +378,17 @@ public class PlayerLoopController : MonoBehaviour
     public bool CanRollDice()
     {
         return CurrentState == LoopState.WaitingToRoll && !isProcessing;
+    }
+
+    /// <summary>
+    /// Sauvegarde la case actuelle et remet le controller à zéro avant un changement de scène.
+    /// </summary>
+    public void ForceEndTurnForSceneChange()
+    {
+        savedPathIndexForReturn = CurrentPathIndex;
+        StopAllCoroutines();
+        isProcessing = false;
+        Debug.Log($"[PlayerLoopController] Changement de scène — case sauvegardée : {savedPathIndexForReturn}");
     }
 
     public bool IsPlayerMoving()

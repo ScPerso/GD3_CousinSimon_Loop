@@ -27,33 +27,25 @@ public class GameStateManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
         Instance = this;
     }
 
     private void Start()
     {
+        // Reset complet à chaque chargement de scène
         CurrentGameState = GameState.Playing;
 
         if (ResourceManager.Instance != null)
-        {
             ResourceManager.Instance.OnResourcesDepleted += HandleResourcesDepleted;
-        }
 
         if (PlayerLoopController.Instance != null)
         {
+            PlayerLoopController.Instance.enabled = true;
             PlayerLoopController.Instance.OnTurnEnded += HandleTurnEnded;
         }
 
         if (DialogueManager.Instance != null)
-        {
             DialogueManager.Instance.OnDialogueEnded += HandleDialogueEnded;
-        }
     }
 
     private void Update()
@@ -178,6 +170,10 @@ public class GameStateManager : MonoBehaviour
 
     public void RestartGame()
     {
+        // Remettre le GameStateManager en état Playing avant le rechargement
+        // pour que les singletons DontDestroyOnLoad soient propres.
+        CurrentGameState = GameState.Playing;
+
         if (GameManager.Instance != null)
         {
             GameManager.Instance.ClearAllFlags();
@@ -188,6 +184,7 @@ public class GameStateManager : MonoBehaviour
             ResourceManager.Instance.ResetResources();
         }
 
+        // Recharger la scène active — PlayerLoopController.Start() réinitialisera enabled et isProcessing.
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 

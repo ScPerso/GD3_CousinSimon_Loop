@@ -24,12 +24,7 @@ public class BoardManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
+        // BoardManager vit dans SampleScene — remplacer l'ancienne instance à chaque rechargement.
         Instance = this;
     }
 
@@ -40,6 +35,8 @@ public class BoardManager : MonoBehaviour
             GenerateBoard();
         }
     }
+
+    public static event System.Action OnBoardGenerated;
 
     public void GenerateBoard()
     {
@@ -54,6 +51,7 @@ public class BoardManager : MonoBehaviour
         EnsureSpecialTiles();
 
         Debug.Log($"Generated loop board: {pathTiles.Count} tiles in path");
+        OnBoardGenerated?.Invoke();
     }
 
     private void GenerateSquareLoop()
@@ -206,10 +204,35 @@ public class BoardManager : MonoBehaviour
         PlaceMultipleTilesWithSpacing(1, GetTileDataByType(TileType.Evidence), usedIndices, 3, totalTiles);
         PlaceMultipleTilesWithSpacing(1, GetTileDataByType(TileType.Corpse), usedIndices, 3, totalTiles);
         PlaceMultipleTilesWithSpacing(2, GetTileDataByType(TileType.Recharge), usedIndices, 3, totalTiles);
+        PlaceMultipleTilesWithSpacing(1, GetTileDataByType(TileType.Puzzle), usedIndices, 3, totalTiles);
+        PlaceTileOnFirstFreeIndex(GetTileDataByType(TileType.HideAndSeek), usedIndices);
         
         FillRemainingWithEmpty(usedIndices);
         
-        Debug.Log($"Special tiles placed: 1 Captain (index 0), 1 Note, 1 Item, 1 Evidence, 1 Corpse, 2 Recharge, {totalTiles - usedIndices.Count} Empty");
+        Debug.Log($"Special tiles placed: 1 Captain (index 0), 1 Note, 1 Item, 1 Evidence, 1 Corpse, 2 Recharge, 1 Puzzle, 1 HideAndSeek, {totalTiles - usedIndices.Count} Empty");
+    }
+    
+    /// <summary>Place une case sur le premier index non encore utilisé, sans contrainte d'espacement.</summary>
+    private void PlaceTileOnFirstFreeIndex(TileData tileData, List<int> usedIndices)
+    {
+        if (tileData == null)
+        {
+            Debug.LogWarning("[BoardManager] PlaceTileOnFirstFreeIndex: tileData est null — HideAndSeekTile manquant dans availableTileTypes ?");
+            return;
+        }
+        
+        for (int i = 0; i < pathTiles.Count; i++)
+        {
+            if (!usedIndices.Contains(i))
+            {
+                usedIndices.Add(i);
+                PlaceSpecificTileAtPath(i, tileData);
+                Debug.Log($"[BoardManager] HideAndSeek placé à l'index libre {i}");
+                return;
+            }
+        }
+        
+        Debug.LogError("[BoardManager] PlaceTileOnFirstFreeIndex: aucun index libre trouvé !");
     }
     
     private void PlaceMultipleTilesWithSpacing(int count, TileData tileData, List<int> usedIndices, int minSpacing, int totalTiles)

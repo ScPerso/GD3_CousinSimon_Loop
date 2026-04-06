@@ -104,6 +104,12 @@ public class EnhancedQuestUI : MonoBehaviour
                 info += "• <color=#66FF66>+30 ressources</color>\n";
                 break;
                 
+            case TileType.Puzzle:
+                info += "• Mini-jeu puzzle (20 secondes)\n";
+                info += "• <color=#66FF66>Succès : +10 ressources</color>\n";
+                info += "• <color=#FF6666>Échec : -10 ressources</color>\n";
+                break;
+                
             case TileType.Empty:
                 info += "• Aucun effet\n";
                 break;
@@ -128,6 +134,8 @@ public class EnhancedQuestUI : MonoBehaviour
                 return "Case <color=#801919>Rouge sombre</color>";
             case TileType.Recharge:
                 return "Case <color=#00FFFF>Cyan</color>";
+            case TileType.Puzzle:
+                return "Case <color=#CC66FF>Violette</color>";
             case TileType.Empty:
                 return "Case <color=#8B8B8B>Grise</color>";
             default:
@@ -145,6 +153,7 @@ public class EnhancedQuestUI : MonoBehaviour
             case TileType.Evidence: return "Preuve";
             case TileType.Corpse: return "Cadavre";
             case TileType.Recharge: return "Recharge";
+            case TileType.Puzzle: return "Puzzle";
             case TileType.Empty: return "Vide";
             default: return "Inconnu";
         }

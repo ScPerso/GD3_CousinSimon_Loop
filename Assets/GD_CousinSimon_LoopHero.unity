@@ -4804,6 +4804,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 81b9ef2440603304980bc7314eaf89c9, type: 2}
   - {fileID: 11400000, guid: 1798af1460d5fc644a8b396a56c53c39, type: 2}
   - {fileID: 11400000, guid: 10c99b82ee2de4b48aa6fbac183b4c54, type: 2}
+  - {fileID: 11400000, guid: 42c94efbdb8f7bb4bb6ddfb3b7f99e67, type: 2}
   generateOnStart: 1
   seed: 0
 --- !u!114 &1439348610
@@ -4836,6 +4837,10 @@ MonoBehaviour:
   onEmptyTile:
     m_PersistentCalls:
       m_Calls: []
+  onPuzzleTile:
+    m_PersistentCalls:
+      m_Calls: []
+  puzzleSceneName: PuzzleScene
   captainFirstDialogue: {fileID: 11400000, guid: e97180d2a3acdd945a3de7efaf28fa49, type: 2}
   captainReturningDialogue: {fileID: 11400000, guid: d4abc12e5d3869e42a5dead57ec29abf, type: 2}
   captainFinalDialogue: {fileID: 11400000, guid: 16fda85b762eea64cb67d81f57c487b2, type: 2}

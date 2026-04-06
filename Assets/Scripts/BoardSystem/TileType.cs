@@ -6,5 +6,7 @@ public enum TileType
     PersonalItem,
     Evidence,
     Corpse,
-    Recharge
+    Recharge,
+    Puzzle,
+    HideAndSeek
 }

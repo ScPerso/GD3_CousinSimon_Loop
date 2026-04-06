@@ -4775,11 +4775,11 @@ Transform:
   m_GameObject: {fileID: 1439348607}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0.9593368, y: 0.6441711, z: -0.79255086}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1628090584}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1439348609
 MonoBehaviour:
@@ -4804,6 +4804,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 81b9ef2440603304980bc7314eaf89c9, type: 2}
   - {fileID: 11400000, guid: 1798af1460d5fc644a8b396a56c53c39, type: 2}
   - {fileID: 11400000, guid: 10c99b82ee2de4b48aa6fbac183b4c54, type: 2}
+  - {fileID: 11400000, guid: 42c94efbdb8f7bb4bb6ddfb3b7f99e67, type: 2}
+  - {fileID: 11400000, guid: 94616a1a783975e4d9c69587d6234eda, type: 2}
   generateOnStart: 1
   seed: 0
 --- !u!114 &1439348610
@@ -4836,6 +4838,14 @@ MonoBehaviour:
   onEmptyTile:
     m_PersistentCalls:
       m_Calls: []
+  onPuzzleTile:
+    m_PersistentCalls:
+      m_Calls: []
+  onHideAndSeekTile:
+    m_PersistentCalls:
+      m_Calls: []
+  puzzleSceneName: PuzzleScene
+  hideAndSeekSceneName: Mini-Jeu1
   captainFirstDialogue: {fileID: 11400000, guid: e97180d2a3acdd945a3de7efaf28fa49, type: 2}
   captainReturningDialogue: {fileID: 11400000, guid: d4abc12e5d3869e42a5dead57ec29abf, type: 2}
   captainFinalDialogue: {fileID: 11400000, guid: 16fda85b762eea64cb67d81f57c487b2, type: 2}
@@ -5150,7 +5160,6 @@ Transform:
   m_Children:
   - {fileID: 1147970725}
   - {fileID: 55744470}
-  - {fileID: 1439348608}
   - {fileID: 413607619}
   - {fileID: 2042722351}
   m_Father: {fileID: 1844754453}
@@ -7201,3 +7210,4 @@ SceneRoots:
   - {fileID: 1859270287}
   - {fileID: 2206137182740691223}
   - {fileID: 1460105295596992974}
+  - {fileID: 1439348608}
