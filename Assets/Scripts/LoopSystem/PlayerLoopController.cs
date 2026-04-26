@@ -44,9 +44,6 @@ public class PlayerLoopController : MonoBehaviour
     private bool isProcessing;
     private List<BoardTile> currentPath = new List<BoardTile>();
 
-    // Survit au rechargement de scène car statique — sauvegardé avant LoadScene.
-    private static int savedPathIndexForReturn = -1;
-
     private void Awake()
     {
         Instance = this;
@@ -76,6 +73,7 @@ public class PlayerLoopController : MonoBehaviour
 
     private IEnumerator InitializePlayerAfterBoard()
     {
+        // Attendre BoardManager
         float timeout = 5f;
         float elapsed = 0f;
         while (BoardManager.Instance == null && elapsed < timeout)
@@ -86,29 +84,74 @@ public class PlayerLoopController : MonoBehaviour
 
         if (BoardManager.Instance == null)
         {
-            Debug.LogError("[PlayerLoopController] BoardManager introuvable après 5s.");
+            Debug.LogError("[PlayerLoopController] BoardManager introuvable apres 5s.");
             yield break;
         }
 
+        // ── Lire la sauvegarde AVANT de generer le board ─────────────────────
+        // On lit ici pour avoir l'index avant toute operation.
+        int resumeIndex = 0;
+        int savedResourcesToApply = -1;
+        bool? miniGameResultToApply = null;
+        int rewardToApply = 0;
+        int penaltyToApply = 0;
+
+        if (GameManager.Instance != null && GameManager.Instance.HasSave)
+        {
+            var (savedResources, savedCaseIndex, miniGameResult, reward, penalty) = GameManager.Instance.LoadState();
+            resumeIndex = savedCaseIndex;
+            savedResourcesToApply = savedResources;
+            miniGameResultToApply = miniGameResult;
+            rewardToApply = reward;
+            penaltyToApply = penalty;
+            GameManager.Instance.ResetSave();
+            Debug.Log($"[PlayerLoopController] Save lue — Case:{savedCaseIndex}, Ressources:{savedResources}, Resultat:{miniGameResult}");
+        }
+
+        // ── Generer le board une seule fois ──────────────────────────────────
+        // BoardManager.generateOnStart peut l'avoir deja fait, mais on le regénère
+        // ici pour garantir que pathTiles est pret et que OnBoardGenerated est fire.
         BoardManager.Instance.GenerateBoard();
         yield return null;
         yield return new WaitForSeconds(0.15f);
 
-        // Lire et consommer l'index sauvegardé (set par ForceEndTurnForSceneChange avant LoadScene)
-        int resumeIndex = 0;
-        if (savedPathIndexForReturn >= 0)
+        // Verifier que l'index de reprise est valide apres generation
+        if (resumeIndex >= BoardManager.Instance.TotalTiles)
         {
-            resumeIndex = savedPathIndexForReturn;
-            savedPathIndexForReturn = -1;
-            Debug.Log($"[PlayerLoopController] Reprise à l'index {resumeIndex} après mini-jeu.");
+            Debug.LogWarning($"[PlayerLoopController] Index {resumeIndex} hors bornes ({BoardManager.Instance.TotalTiles} tuiles). Reprise a 0.");
+            resumeIndex = 0;
         }
 
+        // ── Appliquer les ressources sauvegardees ────────────────────────────
+        if (savedResourcesToApply >= 0 && ResourceManager.Instance != null)
+        {
+            int finalResources = savedResourcesToApply;
+            if (miniGameResultToApply.HasValue)
+            {
+                if (miniGameResultToApply.Value)
+                {
+                    finalResources += rewardToApply;
+                    Debug.Log($"[PlayerLoopController] Mini-jeu reussi : +{rewardToApply} ressources.");
+                }
+                else
+                {
+                    finalResources = Mathf.Max(0, finalResources - penaltyToApply);
+                    Debug.Log($"[PlayerLoopController] Mini-jeu echoue : -{penaltyToApply} ressources.");
+                }
+            }
+            ResourceManager.Instance.SetResources(finalResources);
+        }
+
+        // ── Placer le joueur sur la bonne case ───────────────────────────────
         startPathIndex = resumeIndex;
         InitializePlayer();
 
-        // Forcer le broadcast WaitingToRoll même si l'état est déjà celui-là
-        CurrentState = LoopState.GameOver;
+        // ── Debloquer le jeu ─────────────────────────────────────────────────
+        enabled = true;
+        isProcessing = false;
         ChangeState(LoopState.WaitingToRoll);
+
+        Debug.Log($"[PlayerLoopController] JEU PRET — Case:{resumeIndex}, Ressources:{ResourceManager.Instance?.CurrentResources}");
     }
 
     private void InitializePlayer()
@@ -328,10 +371,7 @@ public class PlayerLoopController : MonoBehaviour
         }
 
         if (GameManager.Instance != null)
-        {
             GameManager.Instance.AddFlag($"loop_{TotalLoops}_complete");
-            GameManager.Instance.SaveFlags();
-        }
 
         if (restartLoopAutomatically)
         {
@@ -363,16 +403,12 @@ public class PlayerLoopController : MonoBehaviour
 
     private void ChangeState(LoopState newState)
     {
-        if (CurrentState == newState)
-            return;
-
+        // Toujours broadcaster, meme si l'etat est identique (ex: retour de mini-jeu en WaitingToRoll)
         CurrentState = newState;
         OnStateChanged?.Invoke(newState);
 
         if (showDebugInfo)
-        {
             Debug.Log($"State changed to: {newState}");
-        }
     }
 
     public bool CanRollDice()
@@ -381,14 +417,23 @@ public class PlayerLoopController : MonoBehaviour
     }
 
     /// <summary>
-    /// Sauvegarde la case actuelle et remet le controller à zéro avant un changement de scène.
+    /// Sauvegarde l'etat courant dans GameManager et arrete les coroutines avant un changement de scene.
     /// </summary>
-    public void ForceEndTurnForSceneChange()
+    public void ForceEndTurnForSceneChange(int miniGameReward = 0, int miniGamePenalty = 0)
     {
-        savedPathIndexForReturn = CurrentPathIndex;
+        if (GameManager.Instance != null && ResourceManager.Instance != null)
+        {
+            GameManager.Instance.SaveState(
+                ResourceManager.Instance.CurrentResources,
+                CurrentPathIndex,
+                miniGameReward,
+                miniGamePenalty
+            );
+        }
+
         StopAllCoroutines();
         isProcessing = false;
-        Debug.Log($"[PlayerLoopController] Changement de scène — case sauvegardée : {savedPathIndexForReturn}");
+        Debug.Log($"[PlayerLoopController] Sauvegarde et arret avant mini-jeu (case {CurrentPathIndex}).");
     }
 
     public bool IsPlayerMoving()

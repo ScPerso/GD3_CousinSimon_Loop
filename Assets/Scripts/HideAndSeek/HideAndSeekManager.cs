@@ -75,7 +75,7 @@ public class HideAndSeekManager : MonoBehaviour
         if (!IsPlaying) return;
         IsPlaying = false;
         Debug.Log("[HideAndSeekManager] VICTOIRE !");
-        HideAndSeekBridge.PendingResult = true;
+        GameManager.Instance?.SetMiniGameResult(true);
         ShowResult(true);
         StartCoroutine(ReturnToMain(resultDisplayDuration));
     }
@@ -85,8 +85,8 @@ public class HideAndSeekManager : MonoBehaviour
     {
         if (!IsPlaying) return;
         IsPlaying = false;
-        Debug.Log("[HideAndSeekManager] DÉFAITE !");
-        HideAndSeekBridge.PendingResult = false;
+        Debug.Log("[HideAndSeekManager] DEFAITE !");
+        GameManager.Instance?.SetMiniGameResult(false);
         ShowResult(false);
         StartCoroutine(ReturnToMain(resultDisplayDuration));
     }

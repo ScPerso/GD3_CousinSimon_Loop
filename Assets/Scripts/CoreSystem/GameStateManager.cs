@@ -170,21 +170,17 @@ public class GameStateManager : MonoBehaviour
 
     public void RestartGame()
     {
-        // Remettre le GameStateManager en état Playing avant le rechargement
-        // pour que les singletons DontDestroyOnLoad soient propres.
         CurrentGameState = GameState.Playing;
 
         if (GameManager.Instance != null)
         {
             GameManager.Instance.ClearAllFlags();
+            GameManager.Instance.ResetSave();
         }
 
         if (ResourceManager.Instance != null)
-        {
             ResourceManager.Instance.ResetResources();
-        }
 
-        // Recharger la scène active — PlayerLoopController.Start() réinitialisera enabled et isProcessing.
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 

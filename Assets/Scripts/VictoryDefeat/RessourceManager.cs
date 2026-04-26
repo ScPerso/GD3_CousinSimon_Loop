@@ -29,51 +29,51 @@ public class ResourceManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
-
         Instance = this;
+
+        // Initialiser dans Awake pour que GameStateManager.Start() trouve une valeur valide.
+        // Le chargement apres mini-jeu est gere par PlayerLoopController.InitializePlayerAfterBoard().
+        CurrentResources = startingResources;
     }
 
     private void Start()
     {
-        CurrentResources = startingResources;
         OnResourcesChanged?.Invoke(CurrentResources);
+    }
+
+    /// <summary>Force les ressources a une valeur precise (utilise au chargement apres mini-jeu).</summary>
+    public void SetResources(int amount)
+    {
+        CurrentResources = Mathf.Max(0, amount);
+        hasCriticalWarningFired = false;
+        hasWarningFired = false;
+        OnResourcesChanged?.Invoke(CurrentResources);
+        Debug.Log($"[ResourceManager] Ressources forcees a {CurrentResources}");
     }
 
     public void AddResources(int amount)
     {
-        if (amount <= 0)
-            return;
-
+        if (amount <= 0) return;
         CurrentResources += amount;
         OnResourcesChanged?.Invoke(CurrentResources);
-
-        Debug.Log($"Resources added: +{amount}. Total: {CurrentResources}");
+        Debug.Log($"Ressources : +{amount} → {CurrentResources}");
     }
 
     public void RemoveResources(int amount)
     {
-        if (amount <= 0)
-            return;
-
+        if (amount <= 0) return;
         CurrentResources -= amount;
         CurrentResources = Mathf.Max(0, CurrentResources);
-
         OnResourcesChanged?.Invoke(CurrentResources);
         CheckResourceThresholds();
-
-        Debug.Log($"Resources removed: -{amount}. Total: {CurrentResources}");
+        Debug.Log($"Ressources : -{amount} → {CurrentResources}");
     }
 
-    public bool HasEnoughResources(int amount)
-    {
-        return CurrentResources >= amount;
-    }
+    public bool HasEnoughResources(int amount) => CurrentResources >= amount;
 
     public bool TrySpendResources(int amount)
     {
-        if (!HasEnoughResources(amount))
-            return false;
-
+        if (!HasEnoughResources(amount)) return false;
         RemoveResources(amount);
         return true;
     }
@@ -83,30 +83,21 @@ public class ResourceManager : MonoBehaviour
         if (CurrentResources <= 0)
         {
             OnResourcesDepleted?.Invoke();
-            Debug.LogWarning("Resources depleted!");
+            Debug.LogWarning("Ressources epuisees !");
         }
         else if (CurrentResources <= criticalThreshold && !hasCriticalWarningFired)
         {
             hasCriticalWarningFired = true;
             OnResourcesCritical?.Invoke();
-            Debug.LogWarning($"Resources critical: {CurrentResources}");
         }
         else if (CurrentResources <= warningThreshold && !hasWarningFired)
         {
             hasWarningFired = true;
             OnResourcesWarning?.Invoke();
-            Debug.LogWarning($"Resources low: {CurrentResources}");
         }
 
-        if (CurrentResources > criticalThreshold)
-        {
-            hasCriticalWarningFired = false;
-        }
-
-        if (CurrentResources > warningThreshold)
-        {
-            hasWarningFired = false;
-        }
+        if (CurrentResources > criticalThreshold) hasCriticalWarningFired = false;
+        if (CurrentResources > warningThreshold) hasWarningFired = false;
     }
 
     public void ResetResources()

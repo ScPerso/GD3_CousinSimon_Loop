@@ -171,7 +171,8 @@ public class PuzzleSceneManager : MonoBehaviour
 
     private IEnumerator ShowResultAndReturn(bool success)
     {
-        PuzzleBridge.Instance?.SetResult(success);
+        // Enregistrer le resultat dans GameManager (qui a deja la sauvegarde de la case et des ressources)
+        GameManager.Instance?.SetMiniGameResult(success);
 
         if (resultPanel != null)
             resultPanel.SetActive(true);
@@ -183,7 +184,7 @@ public class PuzzleSceneManager : MonoBehaviour
 
         if (resultText != null)
         {
-            resultText.text = success ? "Puzzle résolu !" : "Temps écoulé...";
+            resultText.text = success ? "Puzzle resolu !" : "Temps ecoule...";
             resultText.color = success ? successColor : failureColor;
         }
 

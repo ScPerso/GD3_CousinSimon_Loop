@@ -53,8 +53,7 @@ public class TileActionHandler : MonoBehaviour
 
     private void Start()
     {
-        // Résultats en différé pour laisser le temps aux singletons de s'initialiser
-        StartCoroutine(ApplyPendingResultsDelayed());
+        // Plus besoin d'ApplyPendingResultsDelayed — ResourceManager.Start() gere les recompenses.
     }
 
     /// <summary>Rebind les events sur toutes les tuiles fraîchement générées.</summary>
@@ -67,61 +66,6 @@ public class TileActionHandler : MonoBehaviour
             tile.OnTileActivated += HandleTileActivation;
         }
         Debug.Log($"[TileActionHandler] Events rebindés sur {tiles.Length} tuiles.");
-    }
-
-    private System.Collections.IEnumerator ApplyPendingResultsDelayed()
-    {
-        // Attendre que ResourceManager soit prêt
-        float timeout = 3f;
-        float elapsed = 0f;
-        while (ResourceManager.Instance == null && elapsed < timeout)
-        {
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
-
-        ApplyPuzzleResultIfPending();
-        ApplyHideAndSeekResultIfPending();
-    }
-
-    /// <summary>Applique le résultat du mini-jeu cache-cache si on vient d'en revenir.</summary>
-    private void ApplyHideAndSeekResultIfPending()
-    {
-        if (!HideAndSeekBridge.HasPendingResult) return;
-
-        bool success = HideAndSeekBridge.ConsumeResult();
-        if (success)
-        {
-            ResourceManager.Instance?.AddResources(HideAndSeekBridge.RewardOnSuccess);
-            Debug.Log($"[HideAndSeek] Mini-jeu réussi ! +{HideAndSeekBridge.RewardOnSuccess} ressources.");
-        }
-        else
-        {
-            int penalty = Mathf.Abs(HideAndSeekBridge.PenaltyOnFailure);
-            ResourceManager.Instance?.RemoveResources(penalty);
-            Debug.Log($"[HideAndSeek] Mini-jeu échoué. -{penalty} ressources.");
-        }
-    }
-
-    /// <summary>Applique le résultat du mini-jeu puzzle si on vient d'en revenir.</summary>
-    private void ApplyPuzzleResultIfPending()
-    {
-        if (PuzzleBridge.Instance == null || !PuzzleBridge.Instance.HasPendingResult)
-            return;
-
-        if (PuzzleBridge.Instance.PuzzleSolved)
-        {
-            ResourceManager.Instance?.AddResources(PuzzleBridge.RewardOnSuccess);
-            Debug.Log($"[Puzzle] Puzzle réussi ! +{PuzzleBridge.RewardOnSuccess} ressources.");
-        }
-        else
-        {
-            int penalty = Mathf.Abs(PuzzleBridge.PenaltyOnFailure);
-            ResourceManager.Instance?.RemoveResources(penalty);
-            Debug.Log($"[Puzzle] Puzzle échoué. -{penalty} ressources.");
-        }
-
-        PuzzleBridge.Instance.ConsumeResult();
     }
 
     private void HandleTileActivation(BoardTile tile)
@@ -381,19 +325,15 @@ public class TileActionHandler : MonoBehaviour
     private void ExecutePuzzleAction(GameObject activator, BoardTile tile)
     {
         if (TileNameDisplay.Instance != null)
-            TileNameDisplay.Instance.ShowTileName("Puzzle mystérieux");
+            TileNameDisplay.Instance.ShowTileName("Puzzle mysterieux");
 
-        Debug.Log("[Puzzle] Case puzzle activée, chargement du mini-jeu...");
+        Debug.Log("[Puzzle] Case puzzle activee, chargement du mini-jeu...");
 
         tile.MarkAsVisited();
         onPuzzleTile?.Invoke(activator, tile);
 
-        // Sauvegarder la position courante pour y revenir après le mini-jeu
-        if (PuzzleBridge.Instance != null && PlayerLoopController.Instance != null)
-            PuzzleBridge.Instance.SavedPathIndex = PlayerLoopController.Instance.CurrentPathIndex;
-
         if (PlayerLoopController.Instance != null)
-            PlayerLoopController.Instance.ForceEndTurnForSceneChange();
+            PlayerLoopController.Instance.ForceEndTurnForSceneChange(PuzzleBridge.RewardOnSuccess, Mathf.Abs(PuzzleBridge.PenaltyOnFailure));
 
         SceneManager.LoadScene(puzzleSceneName);
     }
@@ -420,17 +360,13 @@ public class TileActionHandler : MonoBehaviour
         if (TileNameDisplay.Instance != null)
             TileNameDisplay.Instance.ShowTileName("Cache-cache !");
 
-        Debug.Log("[HideAndSeek] Case cache-cache activée, chargement du mini-jeu...");
+        Debug.Log("[HideAndSeek] Case cache-cache activee, chargement du mini-jeu...");
 
         tile.MarkAsVisited();
         onHideAndSeekTile?.Invoke(activator, tile);
 
-        // Sauvegarder la position courante pour y revenir après le mini-jeu
         if (PlayerLoopController.Instance != null)
-            HideAndSeekBridge.SavedPathIndex = PlayerLoopController.Instance.CurrentPathIndex;
-
-        if (PlayerLoopController.Instance != null)
-            PlayerLoopController.Instance.ForceEndTurnForSceneChange();
+            PlayerLoopController.Instance.ForceEndTurnForSceneChange(HideAndSeekBridge.RewardOnSuccess, Mathf.Abs(HideAndSeekBridge.PenaltyOnFailure));
 
         SceneManager.LoadScene(hideAndSeekSceneName);
     }

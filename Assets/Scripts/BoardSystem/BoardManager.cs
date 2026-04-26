@@ -30,8 +30,12 @@ public class BoardManager : MonoBehaviour
 
     private void Start()
     {
+        // La generation est controlee exclusivement par PlayerLoopController.InitializePlayerAfterBoard()
+        // pour garantir que la sauvegarde est lue AVANT la generation du board.
+        // generateOnStart est conserve comme option de debug uniquement.
         if (generateOnStart)
         {
+            Debug.LogWarning("[BoardManager] generateOnStart est active — cela peut causer une double generation. Desactivez-le dans l'Inspector.");
             GenerateBoard();
         }
     }
@@ -204,12 +208,12 @@ public class BoardManager : MonoBehaviour
         PlaceMultipleTilesWithSpacing(1, GetTileDataByType(TileType.Evidence), usedIndices, 3, totalTiles);
         PlaceMultipleTilesWithSpacing(1, GetTileDataByType(TileType.Corpse), usedIndices, 3, totalTiles);
         PlaceMultipleTilesWithSpacing(2, GetTileDataByType(TileType.Recharge), usedIndices, 3, totalTiles);
-        PlaceMultipleTilesWithSpacing(1, GetTileDataByType(TileType.Puzzle), usedIndices, 3, totalTiles);
-        PlaceTileOnFirstFreeIndex(GetTileDataByType(TileType.HideAndSeek), usedIndices);
+        PlaceMultipleTilesWithSpacing(2, GetTileDataByType(TileType.Puzzle), usedIndices, 2, totalTiles);
+        PlaceMultipleTilesWithSpacing(3, GetTileDataByType(TileType.HideAndSeek), usedIndices, 2, totalTiles);
         
         FillRemainingWithEmpty(usedIndices);
         
-        Debug.Log($"Special tiles placed: 1 Captain (index 0), 1 Note, 1 Item, 1 Evidence, 1 Corpse, 2 Recharge, 1 Puzzle, 1 HideAndSeek, {totalTiles - usedIndices.Count} Empty");
+        Debug.Log($"Special tiles placed: 1 Captain, 1 Note, 1 Item, 1 Evidence, 1 Corpse, 2 Recharge, 2 Puzzle, 3 HideAndSeek, {totalTiles - usedIndices.Count} Empty");
     }
     
     /// <summary>Place une case sur le premier index non encore utilisé, sans contrainte d'espacement.</summary>

@@ -364,11 +364,11 @@ Transform:
   m_GameObject: {fileID: 55744466}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0.9593368, y: 0.6441711, z: -0.79255086}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1628090584}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &134329733
 GameObject:
@@ -2247,11 +2247,11 @@ Transform:
   m_GameObject: {fileID: 413607618}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0.9593368, y: 0.6441711, z: -0.79255086}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1628090584}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &413607620
 MonoBehaviour:
@@ -4806,7 +4806,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 10c99b82ee2de4b48aa6fbac183b4c54, type: 2}
   - {fileID: 11400000, guid: 42c94efbdb8f7bb4bb6ddfb3b7f99e67, type: 2}
   - {fileID: 11400000, guid: 94616a1a783975e4d9c69587d6234eda, type: 2}
-  generateOnStart: 1
+  generateOnStart: 0
   seed: 0
 --- !u!114 &1439348610
 MonoBehaviour:
@@ -5159,9 +5159,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1147970725}
-  - {fileID: 55744470}
-  - {fileID: 413607619}
-  - {fileID: 2042722351}
   m_Father: {fileID: 1844754453}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1661901114
@@ -6484,12 +6481,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2042722350}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.9593368, y: 0.6441711, z: -0.79255086}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1628090584}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2042722352
 MonoBehaviour:
@@ -7211,3 +7208,6 @@ SceneRoots:
   - {fileID: 2206137182740691223}
   - {fileID: 1460105295596992974}
   - {fileID: 1439348608}
+  - {fileID: 55744470}
+  - {fileID: 2042722351}
+  - {fileID: 413607619}
