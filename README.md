@@ -1,22 +1,86 @@
-# Dans le loop hero initial, on doit jeter un dé pour avancer et faire des tours sur le plateau. Le but est de résoudre une enquête à travers différents dialogues qui s’ouvrent sur des cases spécifiques.
+# Ce projet est un jeu de plateau au tour par tour en 3D. Chaque tour, le joueur lance un dé et avance d'autant de cases sur une boucle. En atterrissant sur une case, son effet se déclenche immédiatement : découverte d'un élément narratif, gain de ressources, ou lancement d'un mini-jeu dans une scène séparée. À la fin du mini-jeu, le joueur revient au plateau.
 
 # 
 
-# Dans ce rendu, il y a deux nouvelles cases, chacune correspondant à un mini-jeu : un cache-cache avec une IA et un puzzle.
+# \---
 
 # 
 
-# Le puzzle se lance sur la case violette, mais on peut également y accéder en lançant directement la scène appelée “puzzle”. Nous avons 30 secondes pour le compléter, c’est-à-dire placer les bonnes pièces aux bons endroits. Si nous réussissons dans le temps imparti, le mini-jeu est validé et nous gagnons 10 ressources, permettant d’effectuer des lancers de dés supplémentaires dans le loop hero. À l’inverse, nous en perdons 10 en cas d’échec.
+# &#x20;Les cases
 
 # 
 
-# Le puzzle fonctionne avec un tableau de 9 cases vides, chacune numérotée, ainsi que 9 pièces correspondant à 9 illustrations, elles aussi numérotées. Un système de drag \& drop permet de déplacer les pièces, et un système d’ancrage et de padding sur les cases du tableau permet aux pièces de s’y emboîter correctement. Une vérification est effectuée une fois le puzzle complété : “chaque pièce est-elle positionnée sur la case correspondante ?”. Si oui, le puzzle est réussi ; sinon, c’est un échec.
+# Bureau du Capitaine — couleur bleu foncé. Toujours placée en première position. La visite est mémorisée par le jeu.
 
 # 
 
-# Concernant le cache-cache, il se déroule sur la case orange (la première des deux). L’IA utilise un système de points de patrouille (target points), c’est-à-dire des positions dans la scène entre lesquelles elle se déplace. Elle patrouille de point en point, et dispose d’un cône de vision défini par une distance et un angle. Si le joueur entre dans ce cône, l’IA vérifie s’il y a un obstacle entre elle et le joueur pouvant bloquer sa vue. Si ce n’est pas le cas, elle passe en mode poursuite : elle accélère, change d’animation (elle court au lieu de marcher) et traque le joueur. Si elle s’éloigne trop, elle perd le joueur de vue et reprend sa patrouille. Si la distance entre elle et le joueur est inférieure ou égale à la “catch distance”, cela déclenche une attaque et donc la défaite du joueur, qui est considéré comme attrapé.
+# Note écrite — couleur jaune pâle. Le jeu mémorise que le joueur a trouvé une note et collecté cet indice. Présente en 1 exemplaire.
 
 # 
 
-# Le puzzle se joue à la souris, tandis que le cache-cache se joue avec ZQSD ou les flèches.
+# Objet personnel — couleur verte. Le jeu mémorise que le joueur a trouvé un objet et collecté cet indice. Présente en 1 exemplaire.
+
+# 
+
+# Preuve matérielle — couleur orange. Le jeu mémorise que le joueur a trouvé une preuve et collecté cet indice. Présente en 1 exemplaire.
+
+# 
+
+# Scène du crime — couleur rouge sombre. Le jeu mémorise que le joueur a découvert le cadavre et collecté cet indice. Présente en 1 exemplaire.
+
+# 
+
+# Station de recharge — couleur cyan. Le joueur reçoit des ressources. Présente en 2 exemplaires.
+
+# 
+
+# Puzzle — couleur violette. Lance le mini-jeu Puzzle. Présent en 2 exemplaires.
+
+# 
+
+# Cache-cache — couleur noire. Lance le mini-jeu Cache-cache. Présent en 3 exemplaires. 
+
+# 
+
+# Dé à coudre — couleur bleu clair. Lance le mini-jeu Dé à coudre. Occupe toutes les cases non attribuées — c'est donc le type le plus fréquent sur le plateau. Décoré de 2 petits cubes rouges qui évoquent le mini jeu.
+
+# 
+
+# \---
+
+# 
+
+# &#x20;Mini-jeu — Cache-cache
+
+# 
+
+# Le joueur doit atteindre un point d'arrivée sans se faire attraper par un zombie. Le zombie se déplace de patrol point en patrol point aléatoirement, tout les deux patrol points atteint il Spin sur lui même et un mur s'envole, réduisant le nombre de cachettes disponible. Déplacement ZQSD, caméra en vue de dessus. À la première visite un seul zombie est actif ; à partir de la deuxième visite un second zombie s'ajoute, augmentant la difficulté. Atteindre la zone cible = victoire (+10 ressources, écran vert "RÉUSSI !"). Se faire attraper = défaite (-10 ressources, écran rouge "ATTRAPÉ !"). Après 3 secondes, retour automatique au plateau.
+
+# 
+
+# Mini-jeu — Dé à coudre
+
+# 
+
+# Le joueur part d'une plateforme surélevée et doit sauter dans une piscine en contrebas. La piscine contient 25 cubes invisibles en grille 5×5. Chaque cube touché pour la première fois devient rouge et visible, et le joueur repart sur la plateforme. L'objectif est de tous les révéler sans retoucher un cube déjà rouge — le faire = défaite immédiate. Si le joueur rate la piscine et tombe dans le vide, une zone de sécurité invisible très large en bas de la scène le renvoie automatiquement sur la plateforme. Révéler les 25 cubes = victoire. ZQSD pour se déplacer, Espace pour sauter.
+
+# 
+
+# Mini-jeu — Puzzle
+
+# 
+
+# Le joueur assemble des pièces dans les bons emplacements. Toutes bien placées = victoire. Retour au plateau à la fin.
+
+# 
+
+# \---
+
+# 
+
+# Ressources et progression
+
+# 
+
+# Un GameManager reste actif en permanence, même quand le jeu change de scène. Il conserve les éléments suivant: les découvertes narratives faites sur le plateau (quelles cases d'enquête ont été visitées), le résultat du dernier mini-jeu, la position et le total de ressources du joueur. Chaque mini-jeu transmet son résultat à ce gestionnaire avant de revenir au plateau, qui applique alors la récompense ou la pénalité.
 
