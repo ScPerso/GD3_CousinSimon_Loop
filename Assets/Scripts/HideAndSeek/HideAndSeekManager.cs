@@ -33,6 +33,10 @@ public class HideAndSeekManager : MonoBehaviour
     public int rewardOnSuccess = 10;
     public int penaltyOnFailure = -10;
 
+    [Header("Second AI (unlocked on 2nd visit)")]
+    [Tooltip("Second zombie GameObject, desactive par defaut dans la scene.")]
+    public GameObject secondAI;
+
     public bool IsPlaying { get; private set; }
 
     private void Awake()
@@ -47,6 +51,14 @@ public class HideAndSeekManager : MonoBehaviour
     private void Start()
     {
         IsPlaying = true;
+
+        // Activer le second zombie si c'est au moins la deuxieme visite
+        if (secondAI != null)
+        {
+            bool isSecondVisit = GameManager.Instance != null && GameManager.Instance.HideAndSeekVisitCount >= 1;
+            secondAI.SetActive(isSecondVisit);
+            Debug.Log($"[HideAndSeekManager] Second AI actif : {isSecondVisit} (visites : {GameManager.Instance?.HideAndSeekVisitCount})");
+        }
 
         if (resultPanel != null) resultPanel.SetActive(false);
 
@@ -75,6 +87,7 @@ public class HideAndSeekManager : MonoBehaviour
         if (!IsPlaying) return;
         IsPlaying = false;
         Debug.Log("[HideAndSeekManager] VICTOIRE !");
+        GameManager.Instance?.IncrementHideAndSeekVisit();
         GameManager.Instance?.SetMiniGameResult(true);
         ShowResult(true);
         StartCoroutine(ReturnToMain(resultDisplayDuration));
@@ -86,6 +99,7 @@ public class HideAndSeekManager : MonoBehaviour
         if (!IsPlaying) return;
         IsPlaying = false;
         Debug.Log("[HideAndSeekManager] DEFAITE !");
+        GameManager.Instance?.IncrementHideAndSeekVisit();
         GameManager.Instance?.SetMiniGameResult(false);
         ShowResult(false);
         StartCoroutine(ReturnToMain(resultDisplayDuration));

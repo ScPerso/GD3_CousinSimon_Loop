@@ -3,57 +3,86 @@ using UnityEngine;
 using UnityEngine.AI;
 
 /// <summary>
-/// IA de patrouille. Patrouille entre des waypoints avec pauses et animation look around.
-/// Passe en mode chasse si le joueur entre dans le cone de vision, retourne en patrouille si perdu.
-/// Si elle touche le joueur : defaite.
+/// IA de patrouille du mini-jeu Cache-cache.
+///
+/// Comportement standard :
+///   - Patrouille entre waypoints.
+///   - A chaque waypoint : s'arrete, joue l'animation LookAround UNE fois en entier, repart.
+///   - Si le joueur entre dans le cone de vision : mode chasse.
+///   - Si le joueur sort du loseSightDistance : retour en patrouille.
+///   - Contact avec le joueur : TriggerDefeat.
+///
+/// Competence speciale (tous les <specialAbilityInterval> waypoints atteints) :
+///   - Au lieu du LookAround standard, l'IA tourne sur elle-meme (spin) en T-pose 2-3 fois.
+///   - Pendant le spin, un obstacle de cachette (HidingObstacle) glow et s'envole vers le haut.
+///   - Au fil du temps, les obstacles disparaissent un par un.
 /// </summary>
 [RequireComponent(typeof(NavMeshAgent))]
 public class HideAndSeekAI : MonoBehaviour
 {
-    public static HideAndSeekAI Instance { get; private set; }
+    // Pas de singleton : plusieurs instances peuvent coexister dans la scene.
 
+    // ── Patrouille ────────────────────────────────────────────────────────
     [Header("Patrol")]
     public Transform[] waypoints;
     public float waypointStopDistance = 0.5f;
 
-    [Header("Patrol Pause")]
-    [Tooltip("Duree minimale de la pause a chaque waypoint (secondes).")]
-    public float waypointPauseMin = 1f;
-    [Tooltip("Duree maximale de la pause a chaque waypoint (secondes).")]
-    public float waypointPauseMax = 2f;
-
+    // ── Detection ─────────────────────────────────────────────────────────
     [Header("Detection")]
     public float viewDistance = 8f;
     [Range(1f, 180f)]
     public float viewAngle = 60f;
     public LayerMask obstacleMask;
 
-    [Header("Chase")]
-    public float chaseSpeed = 5f;
-    [Tooltip("Vitesse lente en patrouille (sans avoir vu le joueur).")]
+    // ── Vitesses ──────────────────────────────────────────────────────────
+    [Header("Movement")]
     public float patrolSpeed = 2.5f;
+    public float chaseSpeed  = 5f;
     public float catchDistance = 1.2f;
     public float loseSightDistance = 12f;
 
+    // ── Animator ──────────────────────────────────────────────────────────
     [Header("Animator Parameters")]
-    public string animSpeedParam = "Speed";
-    public string animAttackParam = "Attack";
-    [Tooltip("Parametre bool active pendant la pause au waypoint (animation look around).")]
+    [Tooltip("Float : magnitude de la vitesse (Walk/Run blend).")]
+    public string animSpeedParam      = "Speed";
+    [Tooltip("Trigger : joue l'animation d'attaque.")]
+    public string animAttackParam     = "Attack";
+    [Tooltip("Bool : passe en animation LookAround.")]
     public string animLookAroundParam = "LookAround";
+    [Tooltip("Bool : passe en T-pose pour la competence speciale.")]
+    public string animAbilityParam    = "Ability";
+    [Tooltip("Nom exact de l'etat Animator du LookAround (pour lire sa duree).")]
+    public string lookAroundStateName = "Looking";
 
+    // ── Competence speciale ───────────────────────────────────────────────
+    [Header("Special Ability")]
+    [Tooltip("Nombre de waypoints atteints avant de declencher la competence speciale.")]
+    public int specialAbilityInterval = 3;
+    [Tooltip("Nombre de tours complets sur place lors du spin (2-3 recommande).")]
+    [Range(1f, 5f)]
+    public float spinRotations = 2.5f;
+    [Tooltip("Duree totale du spin (secondes).")]
+    public float spinDuration = 2f;
+    [Tooltip("Duree de la pause apres le spin avant de repartir.")]
+    public float postSpinPause = 0.5f;
+
+    // ── Prive ─────────────────────────────────────────────────────────────
     private NavMeshAgent agent;
-    private Animator animator;
-    private int currentWaypoint;
+    private Animator     animator;
+    private Transform    player;
+
+    private int  currentWaypoint;
+    private int  waypointsReachedCount;
     private bool isChasingPlayer;
     private bool isPausing;
-    private Transform player;
     private float attackCooldown;
+
+    // ─────────────────────────────────────────────────────────────────────
+    #region Unity Lifecycle
 
     private void Awake()
     {
-        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
-        Instance = this;
-        agent = GetComponent<NavMeshAgent>();
+        agent    = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
     }
 
@@ -85,43 +114,32 @@ public class HideAndSeekAI : MonoBehaviour
 
         if (canSee)
         {
-            // Interrompre la pause si elle est en cours
-            if (isPausing)
-            {
-                StopAllCoroutines();
-                isPausing = false;
-                SetLookAround(false);
-            }
-
+            InterruptPause();
             isChasingPlayer = true;
             agent.isStopped = false;
-            agent.speed = chaseSpeed;
+            agent.speed     = chaseSpeed;
             agent.SetDestination(player.position);
         }
         else if (isChasingPlayer)
         {
-            float dist = Vector3.Distance(transform.position, player.position);
-            if (dist > loseSightDistance)
+            if (Vector3.Distance(transform.position, player.position) > loseSightDistance)
             {
                 isChasingPlayer = false;
-                agent.speed = patrolSpeed;
+                agent.speed     = patrolSpeed;
                 Debug.Log("[HideAndSeekAI] Joueur perdu — retour en patrouille.");
                 GoToNextWaypoint();
             }
             else
             {
-                // Continue vers la derniere position connue
                 agent.SetDestination(player.position);
             }
         }
         else if (!isPausing)
         {
-            // Patrouille : avancer vers le prochain waypoint
             if (!agent.pathPending && agent.remainingDistance <= waypointStopDistance)
-                StartCoroutine(PauseAtWaypoint());
+                StartCoroutine(HandleWaypointReached());
         }
 
-        // Animation vitesse
         if (animator != null)
             animator.SetFloat(animSpeedParam, agent.velocity.magnitude);
 
@@ -136,32 +154,129 @@ public class HideAndSeekAI : MonoBehaviour
         }
     }
 
-    /// <summary>Arrete l'IA au waypoint, joue l'animation look around, puis repart.</summary>
-    private IEnumerator PauseAtWaypoint()
+    #endregion
+
+    // ─────────────────────────────────────────────────────────────────────
+    #region Patrol Logic
+
+    /// <summary>Dispatche vers PauseAtWaypoint ou SpecialAbility selon le compteur.</summary>
+    private IEnumerator HandleWaypointReached()
     {
         isPausing = true;
         agent.isStopped = true;
-        SetLookAround(true);
+        waypointsReachedCount++;
 
-        float pauseDuration = Random.Range(waypointPauseMin, waypointPauseMax);
-        Debug.Log($"[HideAndSeekAI] Pause au waypoint {currentWaypoint} — {pauseDuration:F1}s.");
-        yield return new WaitForSeconds(pauseDuration);
+        Debug.Log($"[HideAndSeekAI] Waypoint atteint ({waypointsReachedCount}).");
 
-        SetLookAround(false);
+        if (waypointsReachedCount % specialAbilityInterval == 0)
+            yield return StartCoroutine(SpecialAbility());
+        else
+            yield return StartCoroutine(LookAroundPause());
+
         agent.isStopped = false;
         isPausing = false;
-
         GoToNextWaypoint();
     }
 
-    /// <summary>Active ou desactive le parametre bool LookAround sur l'Animator.</summary>
-    private void SetLookAround(bool value)
+    /// <summary>Joue l'animation LookAround UNE fois en entier avant de repartir.</summary>
+    private IEnumerator LookAroundPause()
     {
-        if (animator != null && !string.IsNullOrEmpty(animLookAroundParam))
-            animator.SetBool(animLookAroundParam, value);
+        SetAnimBool(animLookAroundParam, true);
+
+        // Attendre que l'Animator entre dans l'etat LookAround
+        yield return new WaitUntil(() =>
+            animator != null &&
+            animator.GetCurrentAnimatorStateInfo(0).IsName(lookAroundStateName));
+
+        // Lire la duree reelle du clip et attendre qu'il joue une fois
+        float clipLength = animator.GetCurrentAnimatorStateInfo(0).length;
+        Debug.Log($"[HideAndSeekAI] LookAround — duree clip : {clipLength:F2}s.");
+        yield return new WaitForSeconds(clipLength);
+
+        SetAnimBool(animLookAroundParam, false);
     }
 
-    /// <summary>Retourne vrai si le joueur est dans le cone de vision et sans obstacle.</summary>
+    /// <summary>
+    /// Competence speciale : spin en T-pose + suppression d'un obstacle de cachette.
+    /// </summary>
+    private IEnumerator SpecialAbility()
+    {
+        Debug.Log("[HideAndSeekAI] COMPETENCE SPECIALE !");
+
+        // Passer en T-pose (Ability = true gele/remplace l'animation courante)
+        SetAnimBool(animAbilityParam, true);
+        yield return null; // laisser l'animator transitionner
+
+        // Supprimer un obstacle pendant le spin.
+        // ClaimRandom() retire l'obstacle de la liste atomiquement :
+        // une autre IA simultanee ne peut pas choisir le meme mur.
+        HidingObstacle obstacle = HidingObstacle.ClaimRandom();
+        if (obstacle != null)
+        {
+            Debug.Log($"[HideAndSeekAI] ({name}) Obstacle supprime : {obstacle.name}");
+            obstacle.Remove();
+        }
+        else
+        {
+            Debug.Log($"[HideAndSeekAI] ({name}) Plus aucun obstacle a supprimer.");
+        }
+
+        // Spin : <spinRotations> tours complets en <spinDuration> secondes
+        float elapsed    = 0f;
+        float totalAngle = spinRotations * 360f;
+        float startY     = transform.eulerAngles.y;
+
+        while (elapsed < spinDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / spinDuration;
+            float angle = Mathf.Lerp(0f, totalAngle, t);
+            transform.eulerAngles = new Vector3(
+                transform.eulerAngles.x,
+                startY + angle,
+                transform.eulerAngles.z);
+            yield return null;
+        }
+
+        // Pause courte apres le spin
+        yield return new WaitForSeconds(postSpinPause);
+
+        SetAnimBool(animAbilityParam, false);
+    }
+
+    private void GoToNextWaypoint()
+    {
+        if (waypoints == null || waypoints.Length == 0) return;
+
+        // Choisir un waypoint aleatoire different du precedent
+        if (waypoints.Length > 1)
+        {
+            int next;
+            do { next = Random.Range(0, waypoints.Length); }
+            while (next == currentWaypoint);
+            currentWaypoint = next;
+        }
+
+        agent.SetDestination(waypoints[currentWaypoint].position);
+        Debug.Log($"[HideAndSeekAI] Cap waypoint aleatoire {currentWaypoint}.");
+    }
+
+    /// <summary>Interrompt une pause en cours si l'IA voit le joueur.</summary>
+    private void InterruptPause()
+    {
+        if (!isPausing) return;
+        StopAllCoroutines();
+        isPausing = false;
+        SetAnimBool(animLookAroundParam, false);
+        SetAnimBool(animAbilityParam, false);
+    }
+
+    #endregion
+
+    // ─────────────────────────────────────────────────────────────────────
+    #region Detection
+
+    /// <summary>Retourne vrai si le joueur est dans le cone de vision sans obstacle.</summary>
     private bool CanSeePlayer()
     {
         if (player == null) return false;
@@ -171,8 +286,7 @@ public class HideAndSeekAI : MonoBehaviour
 
         if (dist > viewDistance) return false;
 
-        float angle = Vector3.Angle(transform.forward, dirToPlayer);
-        if (angle > viewAngle * 0.5f) return false;
+        if (Vector3.Angle(transform.forward, dirToPlayer) > viewAngle * 0.5f) return false;
 
         if (Physics.Raycast(transform.position + Vector3.up * 0.5f, dirToPlayer.normalized, dist, obstacleMask))
             return false;
@@ -180,23 +294,32 @@ public class HideAndSeekAI : MonoBehaviour
         return true;
     }
 
-    private void GoToNextWaypoint()
-    {
-        if (waypoints == null || waypoints.Length == 0) return;
+    #endregion
 
-        agent.SetDestination(waypoints[currentWaypoint].position);
-        Debug.Log($"[HideAndSeekAI] Cap waypoint {currentWaypoint}.");
-        currentWaypoint = (currentWaypoint + 1) % waypoints.Length;
+    // ─────────────────────────────────────────────────────────────────────
+    #region Helpers
+
+    private void SetAnimBool(string paramName, bool value)
+    {
+        if (animator != null && !string.IsNullOrEmpty(paramName))
+            animator.SetBool(paramName, value);
     }
+
+    #endregion
+
+    // ─────────────────────────────────────────────────────────────────────
+    #region Gizmos
 
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = isChasingPlayer ? Color.red : Color.yellow;
         Gizmos.DrawWireSphere(transform.position, viewDistance);
 
-        Vector3 leftDir  = Quaternion.Euler(0, -viewAngle * 0.5f, 0) * transform.forward;
-        Vector3 rightDir = Quaternion.Euler(0,  viewAngle * 0.5f, 0) * transform.forward;
-        Gizmos.DrawRay(transform.position, leftDir  * viewDistance);
-        Gizmos.DrawRay(transform.position, rightDir * viewDistance);
+        Vector3 left  = Quaternion.Euler(0, -viewAngle * 0.5f, 0) * transform.forward;
+        Vector3 right = Quaternion.Euler(0,  viewAngle * 0.5f, 0) * transform.forward;
+        Gizmos.DrawRay(transform.position, left  * viewDistance);
+        Gizmos.DrawRay(transform.position, right * viewDistance);
     }
+
+    #endregion
 }

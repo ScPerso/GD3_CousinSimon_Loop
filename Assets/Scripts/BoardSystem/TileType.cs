@@ -8,5 +8,6 @@ public enum TileType
     Corpse,
     Recharge,
     Puzzle,
-    HideAndSeek
+    HideAndSeek,
+    Thimble
 }

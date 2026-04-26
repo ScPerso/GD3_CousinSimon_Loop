@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6122123632a106b43b6089d5eb76b7dd, type: 3}
-  m_Name: HideAndSeekTile
+  m_Name: TileData_Thimble
   m_EditorClassIdentifier: 
-  tileType: 8
-  tileName: Cache-cache !
-  description: Une ombre vous observe. Foncez vers la sortie sans vous faire attraper.
+  tileType: 9
+  tileName: "D\xE9 \xE0 coudre"
+  description: Saute dans la piscine sans toucher les zones rouges !
   tileIcon: {fileID: 0}
-  tileColor: {r: 0.05, g: 0.05, b: 0.05, a: 1}
+  tileColor: {r: 0.58, g: 0, b: 0.83, a: 1}
   tilePrefab: {fileID: 0}
   encounterChance: 0
   isPassable: 1

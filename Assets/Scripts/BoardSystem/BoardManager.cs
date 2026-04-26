@@ -211,9 +211,9 @@ public class BoardManager : MonoBehaviour
         PlaceMultipleTilesWithSpacing(2, GetTileDataByType(TileType.Puzzle), usedIndices, 2, totalTiles);
         PlaceMultipleTilesWithSpacing(3, GetTileDataByType(TileType.HideAndSeek), usedIndices, 2, totalTiles);
         
-        FillRemainingWithEmpty(usedIndices);
+        FillRemainingWithThimble(usedIndices);
         
-        Debug.Log($"Special tiles placed: 1 Captain, 1 Note, 1 Item, 1 Evidence, 1 Corpse, 2 Recharge, 2 Puzzle, 3 HideAndSeek, {totalTiles - usedIndices.Count} Empty");
+        Debug.Log($"Special tiles placed: 1 Captain, 1 Note, 1 Item, 1 Evidence, 1 Corpse, 2 Recharge, 2 Puzzle, 3 HideAndSeek, {totalTiles - usedIndices.Count} Thimble");
     }
     
     /// <summary>Place une case sur le premier index non encore utilisé, sans contrainte d'espacement.</summary>
@@ -283,6 +283,27 @@ public class BoardManager : MonoBehaviour
             if (!usedIndices.Contains(i))
             {
                 PlaceSpecificTileAtPath(i, emptyTileData);
+            }
+        }
+    }
+
+    /// <summary>Remplace toutes les cases restantes par des cases Thimble (Dé à coudre).</summary>
+    private void FillRemainingWithThimble(List<int> usedIndices)
+    {
+        TileData thimbleData = GetTileDataByType(TileType.Thimble);
+        if (thimbleData == null)
+        {
+            Debug.LogWarning("[BoardManager] TileData Thimble introuvable — repli sur Empty.");
+            FillRemainingWithEmpty(usedIndices);
+            return;
+        }
+
+        for (int i = 0; i < pathTiles.Count; i++)
+        {
+            if (!usedIndices.Contains(i))
+            {
+                usedIndices.Add(i);
+                PlaceSpecificTileAtPath(i, thimbleData);
             }
         }
     }

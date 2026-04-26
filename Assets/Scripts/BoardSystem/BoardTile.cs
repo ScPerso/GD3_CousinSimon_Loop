@@ -83,6 +83,45 @@ public class BoardTile : MonoBehaviour
             tileRenderer.color = tileData.tileColor;
             originalColor = tileData.tileColor;
         }
+
+        if (tileData.tileType == TileType.Thimble)
+            SpawnThimbleDecorations();
+    }
+
+    /// <summary>
+    /// Spawn 2 petits cubes rouges décoratifs sans collider au-dessus de la case,
+    /// pour évoquer une piscine avec des cubes rouges posés dessus.
+    /// </summary>
+    private void SpawnThimbleDecorations()
+    {
+        // Positions locales légèrement décalées pour un aspect naturel
+        Vector3[] offsets = new Vector3[]
+        {
+            new Vector3(-0.18f, 0.58f,  0.12f),
+            new Vector3( 0.15f, 0.58f, -0.10f)
+        };
+
+        foreach (Vector3 offset in offsets)
+        {
+            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            cube.name = "ThimbleDecor";
+            cube.transform.SetParent(transform, false);
+            cube.transform.localPosition = offset;
+            cube.transform.localScale    = new Vector3(0.18f, 0.18f, 0.18f);
+
+            // Couleur rouge
+            MeshRenderer r = cube.GetComponent<MeshRenderer>();
+            if (r != null)
+            {
+                r.material = new Material(r.sharedMaterial);
+                r.material.color = new Color(0.85f, 0.1f, 0.1f);
+            }
+
+            // Pas de collision
+            Collider col = cube.GetComponent<Collider>();
+            if (col != null)
+                Destroy(col);
+        }
     }
 
     public void EnterTile(GameObject entity)
@@ -135,6 +174,15 @@ public class BoardTile : MonoBehaviour
                 break;
             case TileType.Recharge:
                 HandleRechargeTile(activator);
+                break;
+            case TileType.HideAndSeek:
+                HandleHideAndSeekTile(activator);
+                break;
+            case TileType.Puzzle:
+                HandlePuzzleTile(activator);
+                break;
+            case TileType.Thimble:
+                HandleThimbleTile(activator);
                 break;
         }
     }
@@ -206,6 +254,27 @@ public class BoardTile : MonoBehaviour
         {
             GameManager.Instance.AddFlag($"recharge_visited_{gridPosition.x}_{gridPosition.y}");
         }
+    }
+
+    private void HandleHideAndSeekTile(GameObject activator)
+    {
+        Debug.Log($"[BoardTile] Case HideAndSeek activée à {gridPosition}");
+        PlayerLoopController.Instance?.ForceEndTurnForSceneChange(10, 10);
+        UnityEngine.SceneManagement.SceneManager.LoadScene("Mini-Jeu1");
+    }
+
+    private void HandlePuzzleTile(GameObject activator)
+    {
+        Debug.Log($"[BoardTile] Case Puzzle activée à {gridPosition}");
+        PlayerLoopController.Instance?.ForceEndTurnForSceneChange(10, 10);
+        UnityEngine.SceneManagement.SceneManager.LoadScene("Mini-Jeu-Puzzle");
+    }
+
+    private void HandleThimbleTile(GameObject activator)
+    {
+        Debug.Log($"[BoardTile] Case Dé à coudre activée à {gridPosition}");
+        PlayerLoopController.Instance?.ForceEndTurnForSceneChange(10, 10);
+        UnityEngine.SceneManagement.SceneManager.LoadScene("Mini-DeACoudre");
     }
 
     private void PlayActivationEffect()

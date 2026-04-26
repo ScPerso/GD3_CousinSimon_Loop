@@ -34,6 +34,14 @@ public class GameManager : MonoBehaviour
     /// <summary>Penalite si mini-jeu echoue.</summary>
     public int MiniGamePenalty { get; private set; }
 
+    // ─── Compteurs de mini-jeux ──────────────────────────────────────────────
+
+    /// <summary>Nombre de fois que le mini-jeu Cache-cache a ete complete (victoire ou defaite).</summary>
+    public int HideAndSeekVisitCount { get; private set; }
+
+    /// <summary>Incremente le compteur de visites Cache-cache. Appele par HideAndSeekManager avant de retourner.</summary>
+    public void IncrementHideAndSeekVisit() => HideAndSeekVisitCount++;
+
     // ─── Flags narratifs ─────────────────────────────────────────────────────
 
     private HashSet<string> narrativeFlags = new HashSet<string>();
